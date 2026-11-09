@@ -13,7 +13,7 @@ const emit = defineEmits(['add']);
     <div><img v-if="item.imgurl" :src="item.imgurl" :alt="item.name"></div>
     <h4>{{ item.name }}</h4>
     <p>NT${{ item.price }}</p>
-    <button @click="emit('add',item)">加入購物車</button>
+    <button @click="emit('add',item)" :disabled="item.status!=1">{{ item.status==1?"加入購物車":"暫不提供" }}</button>
   </article>
 </template>
 
