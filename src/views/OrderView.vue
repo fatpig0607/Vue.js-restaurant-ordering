@@ -2,7 +2,7 @@
 import MenuItemCard from '@/components/MenuItemCard.vue';
 import { ref,computed, onMounted } from 'vue';
 const isCartOpen=ref(false);
-const menuItems = ref([]);
+const menuItems = ref({menuList:[],totalCount:0});
 
 const menuCategories=ref([]);
 
@@ -34,10 +34,11 @@ onMounted(()=>{
 })
 const selectedCategory=ref('全部');
 const visibleItems=computed(()=>{
+  console.log(menuItems.value.menuList);
   if(selectedCategory.value=="全部"){
-    return menuItems.value;
+    return menuItems.value.menuList;
   }
-  return menuItems.value.filter(i=>i.category==selectedCategory.value);
+  return menuItems.value.menuList.filter(i=>i.category==selectedCategory.value);
 })
 let cart=ref([]);
 function addToCart(item){
