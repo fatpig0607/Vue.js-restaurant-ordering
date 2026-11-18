@@ -4,6 +4,10 @@ defineProps({
     type:Object,
     required:true,
   },
+  isSubmitting:{
+    type:Boolean,
+    default:false
+  }
 })
 const emit = defineEmits(['add']);
 </script>
@@ -14,7 +18,7 @@ const emit = defineEmits(['add']);
     <div class="card-body d-flex flex-column gap-2 align-items-center">
       <h4 class="card-title mb-0 text-nowrap">{{ item.name }}</h4>
       <p class="fw-semibold mb-0">NT${{ item.price }}</p>
-      <button class="btn btn-warning" @click="emit('add',item)" :disabled="item.status!=1">{{ item.status==1?"加入購物車":"暫不提供" }}</button>
+      <button class="btn btn-warning" @click="emit('add',item)" :disabled="item.status!=1 || isSubmitting">{{ item.status==1?"加入購物車":"暫不提供" }}</button>
     </div>
     </article>
 </template>

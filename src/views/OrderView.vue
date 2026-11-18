@@ -3,7 +3,7 @@ import MenuItemCard from '@/components/MenuItemCard.vue';
 import { ref,computed, onMounted } from 'vue';
 const isCartOpen=ref(false);
 const menuItems = ref({menuList:[],totalCount:0});
-
+const isSubmitting=ref(false);
 const menuCategories=ref([]);
 
 async function loadCategories(){
@@ -42,6 +42,7 @@ const visibleItems=computed(()=>{
 })
 let cart=ref([]);
 function addToCart(item){
+  if(isSubmitting.value) return;
   const existingItem=cart.value.find(c=>c.id==item.id);//第一次找不到顯示undefined
   // console.log(existingItem);
   if(existingItem){
@@ -58,6 +59,7 @@ let totalQuantity=computed(()=>{
   return cart.value.reduce((sum,item)=>sum+=item.quantity,0);
 })
 function decreaseQuantity(item){
+  if(isSubmitting.value) return;
   if(item.quantity>1){
     item.quantity-=1;
   }else{
@@ -68,7 +70,7 @@ function openCart(){
   isCartOpen.value= !isCartOpen.value;
 }
 async function submitOrder(){
-  if (cart.value.length==0){
+  if (isSubmitting.value || cart.value.length==0){
     return;
   }
   if(!confirm("確定要送出訂單嗎?")) return;
@@ -76,6 +78,7 @@ async function submitOrder(){
     menu_id:item.id,
     quantity:item.quantity,
   }))}
+  isSubmitting.value=true;
   try{
     const response = await fetch("/api/order",{
       method:'POST',
@@ -97,10 +100,13 @@ async function submitOrder(){
   }catch(err){
     console.error("訂單傳送失敗",err);
     alert("訂單傳送失敗");
+  }finally{
+    isSubmitting.value=false;
   }
 
 }
 function clearCart(){
+  if(isSubmitting.value) return;
   if(confirm("確定要清空購物車嗎?")){
     cart.value=[];
   }
@@ -122,7 +128,7 @@ function clearCart(){
     <div class="container">
       <div class="row g-3">
         <div v-for="item in visibleItems" :key="item.id" class="col-md-3 col-6">
-          <MenuItemCard :item="item" @add="addToCart"></MenuItemCard>
+          <MenuItemCard :item="item" :isSubmitting="isSubmitting" @add="addToCart"></MenuItemCard>
         </div>
       </div>
     </div>
@@ -138,8 +144,8 @@ function clearCart(){
               <div class="small text-muted">小計 NT${{ item.price*item.quantity }}</div>
             </div>
             <div class="d-flex align-items-center gap-2">
-              <button @click="decreaseQuantity(item)" class="btn btn-outline-danger btn-sm">-</button>
-              <button @click="addToCart(item)" class="btn btn-outline-success btn-sm">+</button>
+              <button @click="decreaseQuantity(item)" class="btn btn-outline-danger btn-sm" :disabled="isSubmitting">-</button>
+              <button @click="addToCart(item)" class="btn btn-outline-success btn-sm" :disabled="isSubmitting">+</button>
             </div>
           </li>
         </ul>
@@ -149,10 +155,10 @@ function clearCart(){
             <strong>總計 NT$ {{ totalPrice }}</strong>
           </p>
           <div class="d-flex gap-2">
-            <button type="button" class="btn btn-warning flex-grow-1" :disabled="cart.length == 0" @click="submitOrder">
-              送出訂單
+            <button id="sendOrder" type="button" class="btn btn-warning flex-grow-1" :disabled="cart.length == 0 || isSubmitting" @click="submitOrder">
+              {{ isSubmitting?"送出中":"送出訂單" }}<span v-if="isSubmitting" class="spinner-border spinner-border-sm me-2"></span>
             </button>
-            <button type="button" class="btn btn-outline-danger" @click="clearCart" :disabled="cart.length==0">清空</button>
+            <button type="button" class="btn btn-outline-danger" @click="clearCart" :disabled="cart.length == 0 || isSubmitting">清空</button>
           </div>
         </div>
       </section>
